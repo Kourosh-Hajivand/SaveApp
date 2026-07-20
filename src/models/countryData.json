@@ -1,0 +1,152 @@
+[
+    {
+        "country": "Canada",
+        "prefix": "1",
+        "flag": "🇨🇦",
+        "regex": "^(\\+1|1)?[2-9]\\d{2}[2-9](?!11)\\d{6}$"
+    },
+    {
+        "country": "Iran",
+        "prefix": "98",
+        "flag": "🇮🇷",
+        "regex": "^\\+98(0)?9\\d{9}$"
+    },
+    {
+        "country": "United States",
+        "prefix": "1",
+        "flag": "🇺🇸",
+        "regex": "^(\\+1|1)?[2-9]\\d{2}[2-9](?!11)\\d{6}$"
+    },
+    {
+        "country": "United Kingdom",
+        "prefix": "44",
+        "flag": "🇬🇧",
+        "regex": "^(\\+44|0)7\\d{9}$"
+    },
+    {
+        "country": "Australia",
+        "prefix": "61",
+        "flag": "🇦🇺",
+        "regex": "^(\\+61|0)?4\\d{8}$"
+    },
+    {
+        "country": "Germany",
+        "prefix": "49",
+        "flag": "🇩🇪",
+        "regex": "^(\\+49|0)?1[5-7]\\d{8}$"
+    },
+    {
+        "country": "France",
+        "prefix": "33",
+        "flag": "🇫🇷",
+        "regex": "^(\\+33|0)[67]\\d{8}$"
+    },
+    {
+        "country": "India",
+        "prefix": "91",
+        "flag": "🇮🇳",
+        "regex": "^(\\+91|0)?[6789]\\d{9}$"
+    },
+    {
+        "country": "Japan",
+        "prefix": "81",
+        "flag": "🇯🇵",
+        "regex": "^(\\+81|0)?[789]\\d{8}$"
+    },
+    {
+        "country": "Mexico",
+        "prefix": "52",
+        "flag": "🇲🇽",
+        "regex": "^(\\+52|52)?1?\\d{10}$"
+    },
+    {
+        "country": "Brazil",
+        "prefix": "55",
+        "flag": "🇧🇷",
+        "regex": "^(\\+55|0)?[1-9]\\d{9,10}$"
+    },
+    {
+        "country": "South Africa",
+        "prefix": "27",
+        "flag": "🇿🇦",
+        "regex": "^(\\+27|0)?[6-8]\\d{8}$"
+    },
+    {
+        "country": "Italy",
+        "prefix": "39",
+        "flag": "🇮🇹",
+        "regex": "^(\\+39)?3\\d{9}$"
+    },
+    {
+        "country": "Spain",
+        "prefix": "34",
+        "flag": "🇪🇸",
+        "regex": "^(\\+34|0)?[67]\\d{8}$"
+    },
+    {
+        "country": "Russia",
+        "prefix": "7",
+        "flag": "🇷🇺",
+        "regex": "^(\\+7|8)?9\\d{9}$"
+    },
+    {
+        "country": "China",
+        "prefix": "86",
+        "flag": "🇨🇳",
+        "regex": "^(\\+86|0)?1[3-9]\\d{9}$"
+    },
+    {
+        "country": "Turkey",
+        "prefix": "90",
+        "flag": "🇹🇷",
+        "regex": "^(\\+90|0)?5\\d{9}$"
+    },
+    {
+        "country": "Netherlands",
+        "prefix": "31",
+        "flag": "🇳🇱",
+        "regex": "^(\\+31|0)6\\d{8}$"
+    },
+    {
+        "country": "Sweden",
+        "prefix": "46",
+        "flag": "🇸🇪",
+        "regex": "^(\\+46|0)?7\\d{8}$"
+    },
+    {
+        "country": "Switzerland",
+        "prefix": "41",
+        "flag": "🇨🇭",
+        "regex": "^(\\+41|0)7[5-9]\\d{7}$"
+    },
+    {
+        "country": "South Korea",
+        "prefix": "82",
+        "flag": "🇰🇷",
+        "regex": "^(\\+82|0)?1\\d{9}$"
+    },
+    {
+        "country": "Argentina",
+        "prefix": "54",
+        "flag": "🇦🇷",
+        "regex": "^(\\+54|0)?9\\d{10}$"
+    },
+    {
+        "country": "Egypt",
+        "prefix": "20",
+        "flag": "🇪🇬",
+        "regex": "^(\\+20|0)?1[0-9]{9}$"
+    },
+    {
+        "country": "Indonesia",
+        "prefix": "62",
+        "flag": "🇮🇩",
+        "regex": "^(\\+62|0)?8\\d{8,10}$"
+    },
+    {
+        "country": "Saudi Arabia",
+        "prefix": "966",
+        "flag": "🇸🇦",
+        "regex": "^(\\+966|0)?5\\d{8}$"
+    }
+]
