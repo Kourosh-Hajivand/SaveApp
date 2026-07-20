@@ -46,7 +46,8 @@ function BottomNavBarComponent({ activeKey, onTabPress, onScanPress }: BottomNav
       style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 16) }]}
     >
       <View style={styles.bar}>
-        <View style={styles.group}>
+        {/* Equal-width side rails keep left/right padding and spacing mirrored. */}
+        <View style={styles.sideGroup}>
           {LEFT_TABS.map((tab) => (
             <TabButton
               key={tab.key}
@@ -66,7 +67,6 @@ function BottomNavBarComponent({ activeKey, onTabPress, onScanPress }: BottomNav
           >
             <ScanIcon size={24} color={colors.white} />
           </Pressable>
-          {/* Same vertical stack as side tabs so the title baseline matches. */}
           <View style={styles.scanLabelBlock}>
             <Text style={styles.scanLabel} numberOfLines={1} allowFontScaling={false}>
               Scan Receipt
@@ -75,7 +75,7 @@ function BottomNavBarComponent({ activeKey, onTabPress, onScanPress }: BottomNav
           </View>
         </View>
 
-        <View style={styles.group}>
+        <View style={styles.sideGroup}>
           {RIGHT_TABS.map((tab) => (
             <TabButton
               key={tab.key}
@@ -115,27 +115,25 @@ function TabButton({ tab, active, onPress }: TabButtonProps) {
 }
 
 const SCAN_SIZE = 60;
-const SCAN_LABEL_WIDTH = 92;
 
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 16,
+    right: 16,
     bottom: 0,
     alignItems: 'center',
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'space-between',
     width: '100%',
     maxWidth: 389,
     backgroundColor: 'rgba(255,255,255,0.92)',
     borderWidth: 1,
     borderColor: colors.strokeColor,
     borderRadius: 56,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     paddingTop: 6,
     paddingBottom: 6,
     shadowColor: '#000000',
@@ -144,18 +142,19 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 12,
   },
-  group: {
+  sideGroup: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
+    justifyContent: 'space-evenly',
   },
   tab: {
-    width: 66,
-    minWidth: 65,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingHorizontal: 8,
     paddingVertical: 4,
+    minWidth: 56,
   },
   tabLabel: {
     fontFamily: fonts.regular,
@@ -173,10 +172,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   centerSlot: {
-    width: SCAN_LABEL_WIDTH,
+    width: 88,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    // Match side-tab vertical padding so titles share one baseline.
     paddingVertical: 4,
   },
   scanLabelBlock: {
@@ -189,11 +187,9 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: colors.blackText,
     textAlign: 'center',
-    width: SCAN_LABEL_WIDTH,
   },
   scanButton: {
     position: 'absolute',
-    // Above the shared label+indicator stack (label 16 + gap 4 + indicator 2 + padding 4).
     bottom: 30,
     alignSelf: 'center',
     width: SCAN_SIZE,

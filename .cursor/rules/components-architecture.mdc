@@ -1,0 +1,71 @@
+---
+description: Reusable, composable UI component standards
+globs: src/components/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Component Architecture
+
+## Design Goal
+
+Build **comprehensive, reusable components** that work across multiple screens — not one-off UI tied to a single feature.
+
+## Component Checklist
+
+Every shared component must have:
+
+- [ ] Explicit props interface (extend native props when wrapping primitives)
+- [ ] Sensible defaults so simple usage is one line
+- [ ] Variants via props (e.g. `type`, `size`, `variant`) — not copy-pasted components
+- [ ] Theme integration via `useTheme()` or theme tokens
+- [ ] All UI states: default, disabled, loading, error (when applicable)
+- [ ] Accessibility: `accessibilityRole`, `accessibilityLabel`, hit slop for touch targets
+- [ ] Platform-safe behavior (web vs native differences)
+
+## Structure
+
+```tsx
+// 1. Imports
+// 2. Types / props interface (exported)
+// 3. Component (named export, functional)
+// 4. Styles (StyleSheet.create at bottom)
+```
+
+## Composition Over Duplication
+
+```tsx
+// ❌ BAD — duplicate button styles in every screen
+// ✅ GOOD — single Button component with variant prop
+<Button variant="primary" onPress={handleSubmit} loading={isPending}>
+  Save
+</Button>
+```
+
+## Folder Layout
+
+```
+src/components/
+  ui/           # Primitive building blocks (Button, Input, Card)
+  themed-*.tsx  # Theme-aware wrappers
+  feature/      # Feature-specific composites (only if reused within feature)
+```
+
+- `ui/` = generic, app-wide primitives
+- Feature-specific components stay near their feature unless reused elsewhere
+
+## Props API Rules
+
+- Extend underlying primitive props (`TextProps`, `ViewProps`, `PressableProps`) with `Omit` when overriding.
+- Use discriminated unions for mutually exclusive prop groups.
+- Avoid boolean prop explosion — group related options into a `variant` or `size` enum.
+- Forward `ref` when wrapping interactive or measurable elements.
+
+## AppText
+
+Use `variant`, `mode`, and `weight` from `@/components/ui/app-text` — not inline `fontSize`, `lineHeight`, `letterSpacing`, or `fontFamily`. See `typography.mdc` for full rules.
+
+## Do Not
+
+- Put data fetching, navigation, or global store logic inside primitive UI components.
+- Export default and named for the same component.
+- Create "God components" that handle layout + data + actions + styling in one file.

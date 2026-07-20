@@ -8,6 +8,7 @@ import {
   homeBalance,
   homeCategories,
   homeSections,
+  type Product,
 } from "@/features/home";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
@@ -24,6 +25,16 @@ export default function HomeScreen() {
   const handleSelectCategory = useCallback((categoryId: string) => {
     setActiveCategoryId(categoryId);
   }, []);
+
+  const handleProductPress = useCallback(
+    (product: Product) => {
+      router.push({
+        pathname: "/(main)/product/[id]",
+        params: { id: product.id, promoted: product.cashBackPercent >= 40 ? "1" : "0" },
+      });
+    },
+    [router],
+  );
 
   const handleTabPress = useCallback(
     (key: BottomTabKey) => {
@@ -59,7 +70,11 @@ export default function HomeScreen() {
         </View>
 
         {homeSections.map((section) => (
-          <ProductSection key={section.id} section={section} />
+          <ProductSection
+            key={section.id}
+            section={section}
+            onProductPress={handleProductPress}
+          />
         ))}
       </ScrollView>
 

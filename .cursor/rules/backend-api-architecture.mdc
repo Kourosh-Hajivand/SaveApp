@@ -1,0 +1,209 @@
+---
+description: Backend API layer — routes, services, hooks, models, query keys, enums
+globs: src/{api,services,hooks/**/api,models,enums,constants/query-keys.ts,constants/routes.ts}/**/*
+alwaysApply: false
+---
+
+# Backend API Architecture
+
+This is a **realtime** app. All network access must follow a strict layered structure. Components never call APIs directly.
+
+## Folder Structure
+
+```
+src/
+  api/
+    client.ts              # Axios instance, interceptors, auth headers
+    routes/
+      index.ts             # exports unified `routes` object
+      auth.routes.ts       # domain route builders
+      messages.routes.ts
+  services/
+    AuthService.ts         # one service file per domain
+    MessageService.ts
+  hooks/
+    auth/
+      useLogin.ts          # one hook file per query/mutation
+      useCurrentUser.ts
+    messages/
+      useMessages.ts
+      useSendMessage.ts
+  models/
+    auth/
+      LoginDto.ts
+      UserResponse.ts
+    messages/
+      MessageResponse.ts
+  enums/
+    QueryKey.ts            # all React Query keys
+    ApiErrorCode.ts        # backend error codes
+    MessageStatus.ts       # domain enums
+  constants/
+    api.ts                 # base URL, timeouts (from env)
+```
+
+## Layer Rules
+
+| Layer | Responsibility | Must NOT |
+|-------|---------------|----------|
+| `routes/` | Build relative API paths only | Fetch data, hold business logic |
+| `services/` | HTTP calls, typed DTOs/responses | UI state, navigation, toasts |
+| `hooks/` | React Query wiring, cache keys | Raw `fetch`/`axios` calls |
+| `models/` | Request DTOs, response types | Runtime logic |
+| `enums/` | Query keys, status codes, channels | API calls |
+| Components | Render UI, call hooks | Import `routes` or `services` directly |
+
+## Centralized Routes (Required)
+
+**Never hardcode endpoints** in services, hooks, or components.
+
+```ts
+// src/api/routes/messages.routes.ts
+export const messageRoutes = {
+  list: (roomId: string) => `/rooms/${roomId}/messages`,
+  send: (roomId: string) => `/rooms/${roomId}/messages`,
+  getById: (roomId: string, messageId: string) =>
+    `/rooms/${roomId}/messages/${messageId}`,
+} as const;
+
+// src/api/routes/index.ts
+import { authRoutes } from './auth.routes';
+import { messageRoutes } from './messages.routes';
+
+export const routes = {
+  auth: authRoutes,
+  messages: messageRoutes,
+} as const;
+```
+
+Route method names must be consistent: `list`, `getById`, `create`, `update`, `delete`, `archive`, etc.
+
+## Services (One File Per Domain)
+
+```ts
+// src/services/MessageService.ts
+import { apiClient } from '@/api/client';
+import { routes } from '@/api/routes';
+import type { MessageListResponse } from '@/models/messages/MessageListResponse';
+import type { SendMessageDto } from '@/models/messages/SendMessageDto';
+
+export const MessageService = {
+  list: async (roomId: string): Promise<MessageListResponse> => {
+    const { data } = await apiClient.get(routes.messages.list(roomId));
+    return data;
+  },
+
+  send: async (roomId: string, dto: SendMessageDto) => {
+    const { data } = await apiClient.post(routes.messages.send(roomId), dto);
+    return data;
+  },
+} as const;
+```
+
+- Return `response.data`, not the full Axios response.
+- Throw `ApiRequestError` for structured backend errors (message + field errors).
+- Use `URLSearchParams` for query strings.
+- Use `FormData` correctly for multipart uploads.
+
+## Hooks (One File Per Query or Mutation)
+
+```ts
+// src/hooks/messages/useMessages.ts
+import { useQuery } from '@tanstack/react-query';
+import { QueryKey } from '@/enums/QueryKey';
+import { MessageService } from '@/services/MessageService';
+
+export function useMessages(roomId: string) {
+  return useQuery({
+    queryKey: [QueryKey.Messages, roomId],
+    queryFn: () => MessageService.list(roomId),
+    enabled: Boolean(roomId),
+  });
+}
+```
+
+- Components import hooks only — never services.
+- Mutations live in separate files: `useSendMessage.ts`, `useDeleteMessage.ts`.
+- Handle invalidation inside the mutation hook, not in components.
+
+## Query Keys (Centralized Enum)
+
+```ts
+// src/enums/QueryKey.ts
+export enum QueryKey {
+  CurrentUser = 'currentUser',
+  Messages = 'messages',
+  Rooms = 'rooms',
+  RoomDetail = 'roomDetail',
+  Notifications = 'notifications',
+}
+```
+
+Rules:
+- All keys defined in `QueryKey` enum — no inline string literals.
+- Hierarchical keys: `[QueryKey.Messages, roomId]`, `[QueryKey.RoomDetail, roomId]`.
+- Export factory helpers when keys are complex:
+
+```ts
+// src/enums/query-key-factories.ts
+export const messageKeys = {
+  list: (roomId: string) => [QueryKey.Messages, roomId] as const,
+  detail: (roomId: string, id: string) =>
+    [QueryKey.Messages, roomId, id] as const,
+};
+```
+
+## Domain Enums
+
+```ts
+// src/enums/MessageStatus.ts
+export enum MessageStatus {
+  Sent = 'sent',
+  Delivered = 'delivered',
+  Read = 'read',
+  Failed = 'failed',
+}
+```
+
+- Use string enums matching backend values exactly.
+- Never use magic strings for status, roles, or event types.
+
+## Models & Validation
+
+- Request bodies: `*Dto.ts` (e.g. `SendMessageDto.ts`)
+- Responses: `*Response.ts` (e.g. `MessageListResponse.ts`)
+- Validate forms with Zod schemas colocated in `models/` or `schemas/`
+- Do not guess response shapes — match backend contracts precisely
+
+## Error Handling
+
+```ts
+// src/api/errors.ts
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly errors?: Record<string, string[]>,
+    public readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
+```
+
+- Services throw typed errors; hooks/components display them.
+- Never show alerts/toasts inside services.
+
+## State Separation
+
+- **Server state** → React Query (services + hooks)
+- **Client/UI state** → Zustand (modals, filters, draft text)
+- **Realtime state** → React Query cache updates + Zustand for ephemeral UI (see `backend-realtime.mdc`)
+- Never store server data in Zustand unless there is a strong reason
+
+## Side Effects to Warn About
+
+- Changing `QueryKey` values invalidates all cached data
+- Modifying `api/client.ts` interceptors affects every request
+- Changing `routes` paths breaks all services using them
+- Shared response model changes ripple to all consuming hooks/components

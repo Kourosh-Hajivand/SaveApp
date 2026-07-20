@@ -1,0 +1,53 @@
+---
+description: React Native performance best practices
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Performance
+
+## Lists
+
+- Use `FlashList` (@shopify/flash-list) for long lists when added to the project; until then, optimize `FlatList`:
+  - Stable `keyExtractor`
+  - `renderItem` defined outside render or via pure component
+  - `getItemLayout` when item height is fixed
+  - Avoid anonymous inline functions in `renderItem` when they cause re-renders
+
+## Rendering
+
+- React Compiler is on — trust it for memoization; profile before adding manual `memo`.
+- Avoid creating new objects/arrays/functions in JSX props when they trigger unnecessary child re-renders (only when measured).
+- Split heavy screens into smaller components so React can scope updates.
+- Lazy-load heavy screens or modals when appropriate.
+
+## Images
+
+- Use `expo-image` with explicit `width`/`height` or `style` to prevent layout thrashing.
+- Prefer WebP/optimized assets; avoid oversized source images.
+- Use `recyclingKey` for images in lists.
+
+## Animations
+
+- Animate `transform` and `opacity` on the native thread via `react-native-reanimated`.
+- Never drive layout-affecting animations on the JS thread in lists or scroll views.
+- Use `useSharedValue` + `useAnimatedStyle` — not `Animated` from RN core for complex work.
+
+## State
+
+- Keep state as local as possible.
+- Do not store derived data — compute it during render or with a selector.
+- For server state, use React Query (when added); for client UI state, use Zustand (when added).
+- Avoid prop drilling past 2 levels — use composition, context, or a focused store.
+
+## Startup & Bundle
+
+- Defer non-critical imports with dynamic `import()` where it meaningfully reduces initial load.
+- Do not import entire icon libraries — import only used icons.
+- Avoid synchronous heavy work on the main thread during mount.
+
+## Network
+
+- Cache and deduplicate API calls (React Query defaults when integrated).
+- Paginate large datasets; never fetch unbounded lists.
+- Show optimistic UI only when rollback is handled.

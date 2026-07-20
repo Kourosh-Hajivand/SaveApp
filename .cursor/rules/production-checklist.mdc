@@ -1,0 +1,52 @@
+---
+description: Production-ready delivery checklist for every task
+alwaysApply: true
+---
+
+# Production-Ready Checklist
+
+Every completed task must satisfy ALL applicable items before delivery.
+
+## Code
+
+- [ ] Solves the exact requirement — no missing edge cases
+- [ ] No debug `console.log`, commented-out code, or temporary hacks
+- [ ] TypeScript compiles without errors
+- [ ] Lint passes (`npm run lint`)
+- [ ] Follows existing project structure and naming
+- [ ] English-only code comments (only where non-obvious)
+
+## UI / UX
+
+- [ ] Loading state handled
+- [ ] Error state handled with user-friendly message
+- [ ] Empty state handled (when list or data-driven)
+- [ ] Works on iOS, Android, and Web (or platform scope is documented)
+- [ ] Safe area and keyboard handled where relevant
+- [ ] Touch targets ≥ 44pt; accessibility labels on interactive elements
+
+## Architecture
+
+- [ ] Reusable pieces extracted to `components/` or `hooks/` when used or likely reused
+- [ ] No business logic leaked into primitive UI
+- [ ] No hardcoded API URLs — all endpoints in `api/routes/`
+- [ ] Service logic in dedicated service file; hook in dedicated hook file
+- [ ] Query keys from `QueryKey` enum — no inline strings
+- [ ] Realtime channels/events from centralized enums
+- [ ] Realtime cache updates tested (created/updated/deleted events)
+- [ ] Side effects on shared code documented for the user
+
+## Security (when applicable)
+
+- [ ] No secrets in source code
+- [ ] User input validated (Zod when forms are involved)
+- [ ] Sensitive data stored in SecureStore, not AsyncStorage
+
+## Delivery Message
+
+When finishing a task, briefly state:
+
+1. What was done
+2. Files changed
+3. Any risks or side effects for other parts of the app
+4. Suggested manual test steps (if non-trivial)

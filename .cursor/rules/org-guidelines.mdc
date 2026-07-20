@@ -1,0 +1,102 @@
+---
+description: Organization-wide Git, API, testing, and Definition of Done standards (v1.0.0)
+alwaysApply: true
+---
+
+# Organization Development Guidelines (v1.0.0)
+
+Adapted for the **save-app** Expo / TypeScript client. Backend Python rules from the org doc are mapped to the equivalent tooling in this repo.
+
+## Git & Version Control
+
+### Branch Naming
+
+```
+[type]/[ticket-id]-[short-description]
+```
+
+| Type | Purpose | Example |
+|------|---------|---------|
+| `feature/` | New features | `feature/PROJ-123-user-authentication` |
+| `bugfix/` | Non-prod bug fixes | `bugfix/PROJ-456-fix-login-error` |
+| `hotfix/` | Urgent production fixes | `hotfix/PROJ-789-payment-gateway-crash` |
+| `chore/` | Maintenance, deps, docs | `chore/PROJ-100-update-readme` |
+
+Workflow: pull latest from `main` → create branch → open Draft PR early → mark Ready for Review when done.
+
+### Commit Messages (Conventional Commits)
+
+```
+<type>(<scope>): <short summary>
+
+[optional body]
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+Example: `feat(auth): add JWT token refresh on 401`
+
+## Code Style & Quality (TypeScript)
+
+| Org standard (Python) | This project |
+|-----------------------|------------|
+| Ruff / Black | `npm run lint` (ESLint + expo lint) |
+| Type hints | TypeScript `strict` — no `any` |
+| Google docstrings | JSDoc only for non-obvious public APIs |
+| Import order | external → `@/` → relative |
+
+Before committing:
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+```
+
+See also: `core-standards.mdc`, `typescript-quality.mdc`.
+
+## API Design & Versioning
+
+- RESTful nouns: `/users`, not `/getUsers`
+- Correct HTTP methods: GET, POST, PUT, PATCH, DELETE
+- URI versioning: `/api/v1/[resource]` — base URL in `src/constants/api.ts`
+- Route paths only in `src/api/routes/` — never hardcode in services/hooks/components
+- Breaking changes → new major API version; non-breaking → stay on current version
+
+Layer order: `routes` → `services` → `hooks` → `components`
+
+## Testing Requirements (Frontend)
+
+API contract and endpoint tests belong to the **backend** repo — do not duplicate them here.
+
+Frontend tests cover:
+
+- UI components (`src/components/`)
+- Hooks and client logic (`src/hooks/`)
+- Pure helpers/utils (`src/utils/`)
+- Design tokens when logic exists (`src/constants/` — excluding `api.ts`)
+
+Rules:
+
+- Every new feature or bug fix should include frontend unit/component tests when applicable
+- Target **80% coverage** on new/changed frontend code (hooks, components, utils)
+- Run locally before push: `npm test`
+- Component tests: `@testing-library/react-native`
+- Pure logic: Jest without rendering
+
+Test files: `**/__tests__/*.{test,spec}.{ts,tsx}` or `*-test.{ts,tsx}`
+
+## Definition of Done
+
+A task is **Done** only when:
+
+1. `npm run lint` passes
+2. `npm run typecheck` passes
+3. `npm test` passes (add frontend tests when the change warrants them)
+4. App runs without errors in dev
+5. PR reviewed and approved (team process)
+6. CI pipeline passes
+7. README / docs updated when applicable
+8. Loading, error, and empty states handled (UI tasks)
+
+See `production-checklist.mdc` for UI/UX delivery criteria.

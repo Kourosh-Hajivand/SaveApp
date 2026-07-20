@@ -1,0 +1,83 @@
+---
+description: Core engineering standards — production-ready, lint-safe, senior mindset
+alwaysApply: true
+---
+
+# Core Engineering Standards
+
+## Mindset
+
+- Write code as a senior Expo / React Native engineer: simple, correct, maintainable.
+- Every task must ship **production-ready** — no placeholders, TODOs, or "fix later" shortcuts unless explicitly requested.
+- Minimize scope: solve the task with the smallest correct diff. Do not refactor unrelated code.
+- Match existing project conventions before introducing new patterns.
+
+## Post-Task Verification (Required)
+
+After every code change:
+
+1. Run `npm run lint` (or `expo lint`) on affected files.
+2. Fix all lint and TypeScript errors before marking work complete.
+3. If typecheck script exists, run it as well.
+
+Never leave the codebase in a broken state.
+
+## Side Effects & Risk Communication
+
+Before or after changes that may impact other areas, explicitly warn the user:
+
+- Shared components, hooks, or theme tokens modified
+- Navigation / routing structure changes
+- Global providers or layout changes
+- Native config (`app.json`, plugins, permissions)
+- Breaking prop or API contract changes
+
+Format: what changed → who is affected → recommended follow-up (if any).
+
+## Comments & Language
+
+- **Code comments**: English only. Explain *why*, not *what*.
+- **User communication**: Persian (unless the user writes in another language).
+- No Persian inside source files, commit messages, or code comments.
+
+## Git Discipline
+
+- Do not commit unless explicitly asked.
+- Do not modify git config or run destructive git commands.
+- Keep changes atomic and reviewable.
+
+## Clean Code Principles
+
+- Single responsibility per file, component, hook, and function.
+- Prefer early returns over deep nesting.
+- No magic strings/numbers — use constants when reused.
+- No `any`. Use precise types; prefer `unknown` for uncertain data.
+- No silent error swallowing — handle or propagate meaningfully.
+- No unnecessary abstractions, packages, or premature optimization.
+
+## File Organization (this project)
+
+```
+src/
+  app/          # Expo Router screens & layouts
+  components/   # Reusable UI (feature-agnostic)
+  hooks/        # Reusable logic (grouped by domain)
+  api/          # HTTP client + centralized routes
+  services/     # One service file per domain (AuthService, MessageService)
+  models/       # DTOs, response types, Zod schemas
+  enums/        # QueryKey, RealtimeEvent, RealtimeChannel, domain enums
+  realtime/     # WebSocket client, RealtimeService, event handlers
+  stores/       # Zustand client/ephemeral state
+  constants/    # Theme, API base URL, static values
+```
+
+Use the `@/` path alias for imports.
+
+### Backend layers (strict)
+
+1. `api/routes/` → endpoint paths only
+2. `services/` → HTTP calls
+3. `hooks/` → React Query + realtime subscriptions
+4. Components → hooks only (never import services or routes directly)
+
+See `backend-api-architecture.mdc` and `backend-realtime.mdc` for full rules.

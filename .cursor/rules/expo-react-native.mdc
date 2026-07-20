@@ -1,0 +1,62 @@
+---
+description: Expo SDK 57 and React Native conventions for this project
+globs: src/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Expo & React Native Standards
+
+## Documentation First
+
+Before writing Expo-specific code, consult the versioned docs:
+https://docs.expo.dev/versions/v57.0.0/
+
+Do not rely on outdated patterns from earlier SDK versions.
+
+## Stack (save-app)
+
+- Expo SDK 57, Expo Router 57, React 19, React Native 0.86
+- React Compiler enabled (`experiments.reactCompiler`) — avoid manual `memo`/`useMemo`/`useCallback` unless profiling proves they are needed
+- Typed routes enabled (`experiments.typedRoutes`) — use typed `href` and `router` APIs
+- Path alias: `@/` → `src/`
+
+## Expo Router
+
+- Screens live in `src/app/` following file-based routing.
+- Use `_layout.tsx` for nested layouts and shared providers.
+- Prefer `expo-router` navigation (`Link`, `router.push`, `Stack`, `Tabs`) over legacy React Navigation patterns.
+- Handle loading, error, and empty states on every data-driven screen.
+
+## Platform Awareness
+
+- **Primary targets: iOS and Android.** Web is secondary; optimize layouts and interactions for native first.
+- Use `Platform.select` or platform-specific files (`.ios.tsx`, `.android.tsx`, `.web.tsx`) when behavior diverges.
+- Test Safe Area on notched devices via `react-native-safe-area-context`.
+- Prefer Expo-compatible modules (`expo-image`, `expo-font`, etc.) over raw native dependencies.
+- Do not add native modules or config plugins unless necessary and SDK-compatible.
+
+## Mobile UX (iOS-first)
+
+- Root app is wrapped in `AppProvider` (`GestureHandlerRootView` + `SafeAreaProvider` + `KeyboardProvider`).
+- **Keyboard must never cover focused inputs.** Use `KeyboardScreen` or `KeyboardAwareScrollView` on any screen with `TextInput`.
+- Use `AppTextInput` for all text fields — it sets `keyboardAppearance`, min touch height (44pt), and theme colors.
+- Non-form screens: use `ScreenScrollView` with `contentInsetAdjustmentBehavior="automatic"` instead of nesting `SafeAreaView`.
+- Android keyboard resize is configured via `softwareKeyboardLayoutMode: "resize"` in `app.json`.
+- Dismiss keyboard on background tap via `KeyboardScreen`; use `keyboardDismissMode="interactive"` on iOS scroll views.
+- Touch targets ≥ 44pt; use `MIN_TOUCH_TARGET` from `@/constants/mobile`.
+- Prefer native tabs (`NativeTabs`) when building tab navigation; use Stack for simple flows.
+
+## Styling
+
+- Follow `StyleSheet.create` or NativeWind `className` patterns consistently.
+- Reuse theme tokens from `@/constants/theme` and `useTheme()` — do not hardcode colors when tokens exist.
+- Keep styles colocated with components; extract shared styles only when reused across files.
+
+## Images & Assets
+
+- Use `expo-image` for optimized image rendering.
+- Provide appropriate `contentFit`, dimensions, and accessibility labels.
+
+## Permissions & Native Config
+
+- Any permission or `app.json` plugin change must be called out to the user with platform impact (iOS/Android/Web).

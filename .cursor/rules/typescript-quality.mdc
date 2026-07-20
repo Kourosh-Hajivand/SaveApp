@@ -1,0 +1,65 @@
+---
+description: TypeScript strictness, typing patterns, and code quality
+globs: **/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript & Code Quality
+
+## Strict Typing
+
+- Enable and respect strict mode — no `any`, no `@ts-ignore` unless absolutely necessary with an English explanation.
+- Prefer `@ts-expect-error` over `@ts-ignore` when suppression is truly required.
+- Export types alongside components and hooks consumers need.
+
+## Naming
+
+| Kind | Convention | Example |
+|------|-----------|---------|
+| Components | PascalCase | `ThemedText`, `HintRow` |
+| Hooks | `use` prefix | `useTheme`, `useColorScheme` |
+| Types/Interfaces | PascalCase | `ThemedTextProps` |
+| Constants | UPPER_SNAKE or camelCase object | `Fonts`, `theme` |
+| Files | kebab-case | `themed-text.tsx` |
+| Booleans | `is/has/can/should` prefix | `isLoading`, `hasError` |
+
+## Functions
+
+- Keep functions small and focused (single responsibility).
+- Pure helpers go in `src/utils/` (create when needed).
+- Max ~2 parameters; use an options object for more.
+
+## Error Handling
+
+```tsx
+// ❌ BAD
+try { await save() } catch (e) {}
+
+// ✅ GOOD
+try {
+  await save(data);
+} catch (error) {
+  const message = error instanceof Error ? error.message : 'Save failed';
+  setError(message);
+}
+```
+
+## Imports
+
+- Group: external packages → internal aliases (`@/`) → relative
+- No circular dependencies between modules
+- Use `import type` for type-only imports
+
+## Enums vs Unions
+
+- Prefer string literal unions over TypeScript `enum` for simplicity:
+  `type ButtonVariant = 'primary' | 'secondary' | 'ghost'`
+
+## When Adding Dependencies
+
+Before installing a package:
+
+1. Explain why it is needed
+2. List alternatives in the current stack
+3. Confirm Expo / React Native compatibility with SDK 57
+4. Prefer Expo-maintained or Expo-compatible libraries

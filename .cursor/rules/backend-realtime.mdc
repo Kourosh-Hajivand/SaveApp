@@ -1,0 +1,204 @@
+---
+description: Realtime layer — WebSocket channels, events, subscriptions, cache sync
+globs: src/{realtime,enums/Realtime*,hooks/**/realtime,services/*Realtime*}/**/*
+alwaysApply: false
+---
+
+# Realtime Architecture
+
+This app is realtime-first. REST fetches initial state; realtime keeps it in sync.
+
+## Folder Structure
+
+```
+src/
+  realtime/
+    client.ts                    # WebSocket/Pusher/Reverb connection singleton
+    RealtimeService.ts           # subscribe, unsubscribe, connection lifecycle
+    handlers/
+      message.handlers.ts        # domain event handlers
+      presence.handlers.ts
+  enums/
+    RealtimeChannel.ts           # channel name builders
+    RealtimeEvent.ts             # server event names
+  hooks/
+    realtime/
+      useRealtimeSubscription.ts # generic subscription hook
+      useRoomRealtime.ts         # domain-specific realtime hook
+```
+
+## Centralized Channels & Events (Required)
+
+Never hardcode channel or event strings.
+
+```ts
+// src/enums/RealtimeChannel.ts
+export enum RealtimeChannel {
+  User = 'user',
+  Room = 'room',
+  Presence = 'presence',
+}
+
+export const realtimeChannels = {
+  user: (userId: string) => `user.${userId}`,
+  room: (roomId: string) => `room.${roomId}`,
+  presence: (roomId: string) => `presence.${roomId}`,
+} as const;
+
+// src/enums/RealtimeEvent.ts
+export enum RealtimeEvent {
+  MessageCreated = 'message.created',
+  MessageUpdated = 'message.updated',
+  MessageDeleted = 'message.deleted',
+  UserTyping = 'user.typing',
+  PresenceJoined = 'presence.joined',
+  PresenceLeft = 'presence.left',
+}
+```
+
+Event and channel names must match backend contracts exactly.
+
+## Realtime Service
+
+```ts
+// src/realtime/RealtimeService.ts
+import { realtimeChannels } from '@/enums/RealtimeChannel';
+import { RealtimeEvent } from '@/enums/RealtimeEvent';
+import { realtimeClient } from './client';
+
+type EventHandler<T = unknown> = (payload: T) => void;
+
+export const RealtimeService = {
+  subscribe: <T>(
+    channel: string,
+    event: RealtimeEvent,
+    handler: EventHandler<T>,
+  ) => {
+    realtimeClient.subscribe(channel, event, handler);
+    return () => realtimeClient.unsubscribe(channel, event, handler);
+  },
+
+  subscribeToRoom: (roomId: string) =>
+    realtimeChannels.room(roomId),
+} as const;
+```
+
+- Connection logic lives only in `realtime/client.ts` and `RealtimeService.ts`.
+- Components never open WebSocket connections directly.
+
+## Realtime Hooks
+
+### Generic subscription hook
+
+```ts
+// src/hooks/realtime/useRealtimeSubscription.ts
+import { useEffect } from 'react';
+import { RealtimeService } from '@/realtime/RealtimeService';
+import type { RealtimeEvent } from '@/enums/RealtimeEvent';
+
+export function useRealtimeSubscription<T>(
+  channel: string | null,
+  event: RealtimeEvent,
+  handler: (payload: T) => void,
+) {
+  useEffect(() => {
+    if (!channel) return;
+    return RealtimeService.subscribe<T>(channel, event, handler);
+  }, [channel, event, handler]);
+}
+```
+
+### Domain hook (preferred for features)
+
+```ts
+// src/hooks/realtime/useRoomRealtime.ts
+import { useQueryClient } from '@tanstack/react-query';
+import { QueryKey } from '@/enums/QueryKey';
+import { RealtimeEvent } from '@/enums/RealtimeEvent';
+import { realtimeChannels } from '@/enums/RealtimeChannel';
+import { useRealtimeSubscription } from './useRealtimeSubscription';
+import type { MessageResponse } from '@/models/messages/MessageResponse';
+
+export function useRoomRealtime(roomId: string) {
+  const queryClient = useQueryClient();
+  const channel = roomId ? realtimeChannels.room(roomId) : null;
+
+  useRealtimeSubscription<MessageResponse>(
+    channel,
+    RealtimeEvent.MessageCreated,
+    (message) => {
+      queryClient.setQueryData(
+        [QueryKey.Messages, roomId],
+        (old: MessageResponse[] | undefined) =>
+          old ? [...old, message] : [message],
+      );
+    },
+  );
+}
+```
+
+- One domain hook per feature: `useRoomRealtime`, `useNotificationRealtime`.
+- Domain hooks update React Query cache — components stay unaware of WebSocket details.
+
+## Cache Sync Strategy
+
+| Event type | Action |
+|-----------|--------|
+| `*.created` | Append or prepend to list cache |
+| `*.updated` | Patch item in list + detail cache |
+| `*.deleted` | Remove from list cache, invalidate detail |
+| Full state reset needed | `queryClient.invalidateQueries({ queryKey })` |
+
+Prefer surgical `setQueryData` over full refetch for realtime updates.
+
+## Connection Lifecycle
+
+- Connect once at app root (provider or `_layout.tsx`).
+- Reconnect with exponential backoff on disconnect.
+- Re-subscribe all active channels after reconnect.
+- Pass auth token during connection handshake.
+- Disconnect on logout; clear all subscriptions.
+
+## Typing Realtime Payloads
+
+```ts
+// src/models/realtime/MessageCreatedPayload.ts
+import type { MessageResponse } from '@/models/messages/MessageResponse';
+
+export type MessageCreatedPayload = {
+  message: MessageResponse;
+  roomId: string;
+};
+```
+
+- Every event has a typed payload in `src/models/realtime/`.
+- Handlers must validate/narrow payload shape before updating cache.
+
+## Ephemeral State (Typing, Presence)
+
+- Typing indicators and online status → Zustand (short-lived, not cached in React Query).
+- Clear ephemeral state on channel leave or unmount.
+
+```ts
+// src/stores/presence-store.ts
+import { create } from 'zustand';
+
+type PresenceState = {
+  typingUsers: Record<string, string[]>;
+  setTyping: (roomId: string, userId: string, isTyping: boolean) => void;
+};
+```
+
+## Do Not
+
+- Duplicate REST fetch inside realtime handlers when cache update suffices.
+- Store full message history in Zustand.
+- Subscribe to channels in every component instance — use domain hooks at screen level.
+- Use inline event/channel strings anywhere outside `enums/`.
+
+## Side Effects to Warn About
+
+- Changing `RealtimeEvent` values breaks all handlers until backend is aligned.
+- Cache update logic in handlers affects every screen showing that data.
+- Connection auth changes require coordinated backend + client deploy.
+- Missing unsubscribe causes memory leaks and duplicate event handling.
