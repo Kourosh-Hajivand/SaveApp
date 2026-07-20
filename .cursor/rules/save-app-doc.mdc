@@ -1,0 +1,11 @@
+---
+description: Living project doc — always read and update save-app.md
+alwaysApply: true
+---
+
+# IMPORTANT
+
+- Always read `save-app.md` before writing any code.
+- After adding a major feature or completing a milestone, update `save-app.md`.
+- Document the entire database schema in `save-app.md`.
+- For new migrations, make sure to add them to the same file.
