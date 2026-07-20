@@ -26,6 +26,10 @@ export default function HomeScreen() {
     setActiveCategoryId(categoryId);
   }, []);
 
+  const handleSearchPress = useCallback(() => {
+    router.push("/(main)/search");
+  }, [router]);
+
   const handleProductPress = useCallback(
     (product: Product) => {
       router.push({
@@ -50,7 +54,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <SafeAreaView edges={["top"]} style={styles.headerArea}>
-        <HomeHeader />
+        <HomeHeader onSearchPress={handleSearchPress} />
       </SafeAreaView>
 
       <ScrollView
